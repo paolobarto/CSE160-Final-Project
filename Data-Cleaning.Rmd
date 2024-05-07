@@ -1,0 +1,67 @@
+Data-Cleaning.Rmd
+CSE-160 Final-Project
+Paolo Bartolucci
+5/5/2024
+
+Used to load core df used for train/test
+
+[Dataset2](https://data.cityofnewyork.us/Public-Safety/Motor-Vehicle-Collisions-Crashes/h9gi-nx95/about_data)
+
+This is "DataSet2" From the original Report. Dataset 1 contained lat and long data that I was unable to convert to zip code.
+
+This is crash data in NYC. The original dataset is around ~2 mil rows, I used the online filter engine to only include crashes from 2024. Converted the dataset to around 250k rows. There is enough data within the rows to make a difference between fatal vs nonfatal crashes, but that can be changed in the future. For now I will aggregate just a sum of total crashes.
+
+The Result of this is a vector with accident frequencies by zipcode
+
+
+```{r}
+
+
+crash_data <- read.csv("data/Motor_Vehicle_collisions.csv")
+
+crash_data<- na.omit(crash_data)
+
+crash_data <- crash_data$ZIP.CODE
+
+crash_data <- as.data.frame(table(crash_data))
+
+names(crash_data) <- c("zipcode","freq")
+
+
+```
+
+[Dataset3](https://datacommons.techsoup.org/tools/download#pt=CensusZipCodeTabulationArea&place=geoId%2F3651000&sv=Median_Income_Household&dtType=ALL&facets=%7B%7D)
+
+This dataset is the aggregation of existing Cesus data that groups data directly into NYC zip Codes. This contains the median incomes of families by zipcode from 2014-2020.
+
+The income_data df contains the median incomes of NYC zipcodes for 2020.
+
+
+```{r}
+income_data <- read.csv("data/NYC_Census_Income.csv")
+
+income_data <- income_data[,c(2,3,4)]
+income_data <- income_data[income_data$Date.Median_Income_Household == 2020,]
+income_data <- income_data[,c(1,3)]
+names(income_data) <- c("zipcode","median_income")
+
+data <- merge(crash_data, income_data, by="zipcode")
+```
+
+
+
+[Dataset4]()
+
+check if lat long exists in shapefile
+
+
+```{r}
+rental_data <- read.csv("data/Aggregated_Rental.csv")
+
+rental_target <- rental_data[,c('price','bedrooms','zipcode')]
+
+
+data<- merge(data, rental_target, by="zipcode")
+```
+
+
