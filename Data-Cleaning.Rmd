@@ -50,11 +50,53 @@ data <- merge(crash_data, income_data, by="zipcode")
 
 
 
-[Dataset4]()
+[Dataset4](https://www.kaggle.com/c/two-sigma-connect-rental-listing-inquiries/data)
+This dataset is from the Renthop and Two Sigma rental classication competition. Since we compute our classification via zipcode, we needed to convert latititude and longitude to a zipcode. Any package that does this automatically refers to the Google Maps API, which limits the amount of requests per lattitude and longitude. (Currently in May of 2024 its around 2500 per day). This necessitated a script that manually found the zipcode of a latitude and longitude. 
 
-check if lat long exists in shapefile
+The way this script works is by using existing GIS (Geographic Information System ) logic and principles. A Shapefile is a glorified ploygon list that uses latitiude and longitude as the coordinate system to plot its shape. The sf library allows for the creation of a multipolygon object, which contains a function to detect if a point exists within a polygon. We create a point with the latitude and longitude as the x and y. Then we parse through the polygon list to detect which polygons contain the point. 
+
+Once the pseudo code for this was written, specific research revealed this is the preferred method of zipcode processing in the GIS community. 
+
+Result notes:
+This base dataset was used in a similar but more complex project that added much more data processed preformed its own zipcode processing. I assumed since this project used the Google Maps API (in Python) this was the point of truth with minimal errors. Upon comparison of results, I found that the algorithm we wrote detected existing errors in the heavily processed dataset, and is overall better.
 
 
+```{r}
+library(sf)
+library(ggplot2)
+crs <- st_crs(4326)
+renthop_data <- read.csv("data/renthopNYC.csv")
+renthop_data <- renthop_data[,-c(3,4,5,9)]
+zip_locations <- read.csv("data/NYC_zipcode_zones.csv")
+zip_locations <- zip_locations[,c("MODZCTA","the_geom")]
+
+sf_multipolygons <- st_as_sf(zip_locations, wkt = "the_geom",crs=crs)
+
+incorrect<-0
+correct<-0
+
+for(i in 1:nrow(renthop_data))
+{
+  
+  point <- st_point(c(renthop_data$longitude[i],renthop_data$latitude[i]))
+  point_with_crs <- st_sfc(point, crs = crs)
+  is_within <- st_within(point, sf_multipolygons)
+  is_within_vector <- unlist(is_within)
+  renthop_data$zipcode[i] <- sf_multipolygons[is_within_vector[1],]$MODZCTA
+}
+
+
+```
+
+
+Now we merge this data with the other datasets on the zipcode col
+```{r}
+data<- merge(data, renthop_data, by="zipcode")
+```
+
+
+
+This is the precleaned data from the github plagarized but can be used to start creating model. NOW DEPRECATED DO NOT RUN
 ```{r}
 rental_data <- read.csv("data/Aggregated_Rental.csv")
 
