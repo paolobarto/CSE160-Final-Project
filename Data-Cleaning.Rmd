@@ -95,15 +95,14 @@ data<- merge(data, renthop_data, by="zipcode")
 ```
 
 
-
-This is the precleaned data from the github plagarized but can be used to start creating model. NOW DEPRECATED DO NOT RUN
+Once the df has been constructed, there is no reason it has to be processed again, let's save it.
 ```{r}
-rental_data <- read.csv("data/Aggregated_Rental.csv")
-
-rental_target <- rental_data[,c('price','bedrooms','zipcode')]
-
-
-data<- merge(data, rental_target, by="zipcode")
+write.csv(data,"data/data.csv")
 ```
 
+
+If data.csv exists, just run this to load it into your environment.
+```{r}
+data <- read.csv("data/data.csv")
+```
 
