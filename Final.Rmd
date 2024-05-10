@@ -5,6 +5,7 @@ Final Project
 install.packages("caret")
 install.packages("ggplot2")
 install.packages("rpart")
+install.packages("rpart.plot")
 install.packages("e1071")
 install.packages("kernlab")
 install.packages("sf")
@@ -22,6 +23,25 @@ train_control <- trainControl(method = "cv", number = 10)
 # Train Linear Regression model
 linear_model <- train(price ~ ., data = data, method = "lm", trControl = train_control)
 show(linear_model)
+```
+
+```{r}
+library(rpart)
+library(rpart.plot)
+
+#clean data
+simplifiedData <- data[,-c(1,2,7,8)]
+simplifiedData <- simplifiedData[simplifiedData$price <= 20000, ]
+
+# Build the decision tree model
+tree_model <- rpart(price ~ ., data = simplifiedData)
+
+# Plot the decision tree
+prp(tree_model)
+
+#cross validation
+tree_model_cv <- train(price ~ ., data = simplifiedData, method = "rpart", trControl = train_control)
+print(tree_model_cv)
 ```
 
 Map of NYC with shape file
