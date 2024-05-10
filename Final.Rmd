@@ -21,13 +21,7 @@ train_control <- trainControl(method = "cv", number = 10)
 
 # Train Linear Regression model
 linear_model <- train(price ~ ., data = data, method = "lm", trControl = train_control)
-linear_RMSE <- linear_model$results$RMSE
-linear_MAE <- linear_model$results$MAE
-linear_Rsquared <- linear_model$results$Rsquared
-print("Linear Regression")
-print(paste("Mean RMSE:", mean(linear_RMSE)))
-print(paste("Mean MAE:", mean(linear_MAE)))
-print(paste("Mean R-squared:", mean(linear_Rsquared)))
+show(linear_model)
 ```
 
 Map of NYC with shape file
