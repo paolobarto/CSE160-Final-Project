@@ -1,0 +1,131 @@
+Hannah Kaufman
+Final Project
+
+```{r}
+install.packages("caret")
+install.packages("ggplot2")
+install.packages("rpart")
+install.packages("e1071")
+install.packages("kernlab")
+install.packages("sf")
+```
+
+```{r}
+data <- read.csv("data.csv")
+```
+
+```{r}
+library(caret)
+
+train_control <- trainControl(method = "cv", number = 10)
+
+# Train Linear Regression model
+linear_model <- train(price ~ ., data = data, method = "lm", trControl = train_control)
+linear_RMSE <- linear_model$results$RMSE
+linear_MAE <- linear_model$results$MAE
+linear_Rsquared <- linear_model$results$Rsquared
+print("Linear Regression")
+print(paste("Mean RMSE:", mean(linear_RMSE)))
+print(paste("Mean MAE:", mean(linear_MAE)))
+print(paste("Mean R-squared:", mean(linear_Rsquared)))
+
+# Train Logistic Regression model
+logistic_model <- train(price ~ ., data = data, method = "glm", trControl = train_control)
+logistic_RMSE <- logistic_model$results$RMSE
+logistic_MAE <- logistic_model$results$MAE
+logistic_Rsquared <- logistic_model$results$Rsquared
+print("Logistic Regression")
+print(paste("Mean RMSE:", mean(logistic_RMSE)))
+print(paste("Mean MAE:", mean(logistic_MAE)))
+print(paste("Mean R-squared:", mean(logistic_Rsquared)))
+
+# Train KNN model
+knn_model <- train(price ~ ., data = data, method = "knn", trControl = train_control)
+knn_RMSE <- knn_model$results$RMSE
+knn_MAE <- knn_model$results$MAE
+knn_Rsquared <- knn_model$results$Rsquared
+print("KNN")
+print(paste("Mean RMSE:", mean(knn_RMSE)))
+print(paste("Mean MAE:", mean(knn_MAE)))
+print(paste("Mean R-squared:", mean(knn_Rsquared)))
+
+# Train Decision Tree model
+dt_model <- train(price ~ ., data = data, method = "rpart", trControl = train_control)
+dt_RMSE <- dt_model$results$RMSE
+dt_MAE <- dt_model$results$MAE
+dt_Rsquared <- dt_model$results$Rsquared
+print("Decision Tree")
+print(paste("Mean RMSE:", mean(dt_RMSE)))
+print(paste("Mean MAE:", mean(dt_MAE)))
+print(paste("Mean R-squared:", mean(dt_Rsquared)))
+```
+
+Map of NYC with shape file
+```{r}
+library(sf)
+library(ggplot2)
+
+zip_file <- "~/Documents/CSE 160/Final Project/zipcodes.zip"
+unzip(zip_file)
+list.files()
+zipcodesgeo <- st_read(dsn = "geo_export_5eb398c0-2f99-41ce-8d48-eec20204f119.shp")
+
+
+ggplot() +
+  geom_sf(data = zipcodesgeo)
+
+```
+
+Map without zip codes
+```{r}
+library(dplyr)
+
+average_price <- data %>%
+  group_by(zipcode) %>%
+  summarise(avg_price = mean(price, na.rm = TRUE))
+
+merged_data <- merge(zipcodesgeo, average_price, by.x = "modzcta", by.y = "zipcode", all.x = TRUE)
+
+color_scale <- scale_fill_gradient(low = "lightblue", high = "blue", labels = scales::dollar)
+
+choropleth_map <- ggplot(merged_data, aes(fill = avg_price)) +
+  geom_sf() +
+  color_scale +
+  labs(title = "Average Rental Price Per Zip Code", fill = "Average Rent Price") +
+  theme_minimal()
+
+print(choropleth_map)
+
+file_path <- "~/Documents/CSE 160/Final Project/map_no_zip.png"
+
+ggsave(file_path, plot = choropleth_map, width = 10, height = 8, dpi = 300)
+
+```
+
+Map with zip codes printed
+```{r}
+library(dplyr)
+library(ggplot2)
+
+average_price <- data %>%
+  group_by(zipcode) %>%
+  summarise(avg_price = mean(price, na.rm = TRUE))
+
+merged_data <- merge(zipcodesgeo, average_price, by.x = "modzcta", by.y = "zipcode", all.x = TRUE)
+
+color_scale <- scale_fill_gradient(low = "lightblue", high = "blue", labels = scales::dollar)
+
+choropleth_map <- ggplot(merged_data, aes(fill = avg_price)) +
+  geom_sf() +
+  geom_sf_text(aes(label = modzcta), size = 1, color = "black", check_overlap = TRUE) +
+  color_scale +
+  labs(title = "Average Price Choropleth Map", fill = "Average Rent Price") +
+  theme_minimal()
+
+print(choropleth_map)
+
+file_path <- "~/Documents/CSE 160/Final Project/map_with_zip.png"
+
+ggsave(file_path, plot = choropleth_map, width = 10, height = 8, dpi = 300)
+
+```
